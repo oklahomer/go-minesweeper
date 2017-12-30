@@ -6,6 +6,12 @@ import (
 	"math/rand"
 )
 
+var (
+	ErrOpeningOpenedCell    = errors.New("opened cell can not be opened")
+	ErrOpeningFlaggedCell   = errors.New("flagged cell can not be opened")
+	ErrCoordinateOutOfRange = errors.New("invalid coordinate is given")
+)
+
 type Config struct {
 	FieldWidth  int `json:"field_width" yaml:"field_width"`
 	FieldHeight int `json:"field_height" yaml:"field_height"`
@@ -33,7 +39,7 @@ func validateConfig(config *Config) error {
 		return errors.New("mine count is zero")
 	}
 
-	if config.FieldWidth*config.FieldHeight <= config.MineCnt {
+	if (config.FieldWidth * config.FieldHeight) <= config.MineCnt {
 		return errors.New("too many mines")
 	}
 
@@ -122,20 +128,123 @@ func NewField(config *Config) (*Field, error) {
 	}, nil
 }
 
+func (f *Field) Open(coord *Coordinate) (*Result, error) {
+	x := coord.X
+	y := coord.Y
+
+	if x+1 > f.Width || y+1 > f.Height {
+		return nil, ErrCoordinateOutOfRange
+	}
+
+	row := f.cells[y]
+	cell := row[x]
+
+	if cell.state == Opened {
+		return nil, ErrOpeningOpenedCell
+	} else if cell.state == Flagged {
+		return nil, ErrOpeningFlaggedCell
+	}
+
+	if cell.hasMine {
+		cell.state = Exploded
+		return &Result{
+			NewState: cell.state,
+		}, nil
+	}
+
+	cell.state = Opened
+
+	if cell.surroundingCnt == 0 {
+		for _, c := range f.getSurroundingCoordinates(coord) {
+			r := f.cells[c.Y]
+			target := r[c.X]
+			if target.state == Closed {
+				f.Open(c)
+			}
+		}
+	}
+
+	return &Result{NewState: Opened}, nil
+}
+
+func (f *Field) getSurroundingCoordinates(coord *Coordinate) []*Coordinate {
+	x := coord.X
+	y := coord.Y
+
+	var coords []*Coordinate
+	// Above row
+	if y > 0 {
+		if x > 1 {
+			coords = append(coords, &Coordinate{X: x - 1, Y: y - 1})
+		}
+
+		coords = append(coords, &Coordinate{X: x, Y: y - 1})
+
+		if x+1 < f.Width {
+			coords = append(coords, &Coordinate{X: x + 1, Y: y - 1})
+		}
+	}
+
+	// Current row
+	if x > 0 {
+		coords = append(coords, &Coordinate{X: x - 1, Y: y})
+	}
+
+	if x+1 < f.Width {
+		coords = append(coords, &Coordinate{X: x + 1, Y: y})
+	}
+
+	// Below row
+	if y+1 < f.Height {
+		if x > 1 {
+			coords = append(coords, &Coordinate{X: x - 1, Y: y + 1})
+		}
+
+		coords = append(coords, &Coordinate{X: x, Y: y + 1})
+
+		if x+1 < f.Width {
+			coords = append(coords, &Coordinate{X: x + 1, Y: y + 1})
+		}
+	}
+
+	return coords
+}
+
 type Coordinate struct {
 	X int
 	Y int
 }
 
+type State int
+
+func (s State) String() string {
+	switch s {
+	case Closed:
+		return "Closed"
+	case Opened:
+		return "Opened"
+	case Flagged:
+		return "Flagged"
+	case Exploded:
+		return "Exploded"
+	default:
+		panic(fmt.Sprintf("unknown state is given: %d", s))
+	}
+}
+
 const (
-	Closed = iota
+	Closed State = iota
 	Opened
 	Flagged
 	Exploded
 )
 
+type Result struct {
+	NewState State
+}
+
 type cell struct {
-	state          uint
+	state          State
 	hasMine        bool
 	surroundingCnt int
 }
