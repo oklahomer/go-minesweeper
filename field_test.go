@@ -5,50 +5,6 @@ import (
 	"testing"
 )
 
-func TestState_String(t *testing.T) {
-	tests := []struct {
-		state    State
-		expected string
-	}{
-		{
-			state:    Closed,
-			expected: "Closed",
-		},
-		{
-			state:    Opened,
-			expected: "Opened",
-		},
-		{
-			state:    Flagged,
-			expected: "Flagged",
-		},
-		{
-			state:    Exploded,
-			expected: "Exploded",
-		},
-		{
-			state: 123,
-		},
-	}
-
-	for i, test := range tests {
-		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					if test.expected != "" {
-						t.Fatalf("Unexpectedly panicked for state: %d", test.state)
-					}
-				}
-			}()
-
-			s := test.state.String()
-			if s != test.expected {
-				t.Fatalf("Expected %s, but %s was returned.", test.expected, s)
-			}
-		})
-	}
-}
-
 func TestNewConfig(t *testing.T) {
 	config := NewConfig()
 
@@ -119,9 +75,9 @@ func TestNewField(t *testing.T) {
 			}
 
 			mineCnt := 0
-			for _, row := range field.cells {
+			for _, row := range field.Cells {
 				for _, c := range row {
-					if c.hasMine {
+					if c.hasMine() {
 						mineCnt++
 					}
 				}
@@ -137,7 +93,7 @@ func TestField_Open(t *testing.T) {
 	type test struct {
 		field    *Field
 		coord    *Coordinate
-		expected [][]*cell
+		expected [][]Cell
 	}
 
 	tests := []*test{
@@ -146,58 +102,58 @@ func TestField_Open(t *testing.T) {
 			field: &Field{
 				Width:  4,
 				Height: 4,
-				cells: [][]*cell{
+				Cells: [][]Cell{
 					{
-						{state: Closed, hasMine: true, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: true, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 				},
 			},
 			coord: &Coordinate{X: 3, Y: 3},
-			expected: [][]*cell{
+			expected: [][]Cell{
 				{
-					{state: Closed, hasMine: true, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Closed, mine: true, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 			},
 		},
@@ -207,58 +163,58 @@ func TestField_Open(t *testing.T) {
 			field: &Field{
 				Width:  4,
 				Height: 4,
-				cells: [][]*cell{
+				Cells: [][]Cell{
 					{
-						{state: Closed, hasMine: true, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: true, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 				},
 			},
 			coord: &Coordinate{X: 2, Y: 1},
-			expected: [][]*cell{
+			expected: [][]Cell{
 				{
-					{state: Closed, hasMine: true, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Closed, mine: true, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 			},
 		},
@@ -268,58 +224,58 @@ func TestField_Open(t *testing.T) {
 			field: &Field{
 				Width:  4,
 				Height: 4,
-				cells: [][]*cell{
+				Cells: [][]Cell{
 					{
-						{state: Closed, hasMine: true, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 2},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: true, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 2},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 2},
-						{state: Closed, hasMine: true, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 2},
+						&cell{state: Closed, mine: true, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 0},
 					},
 				},
 			},
 			coord: &Coordinate{X: 3, Y: 3},
-			expected: [][]*cell{
+			expected: [][]Cell{
 				{
-					{state: Closed, hasMine: true, surroundingCnt: 1},
-					{state: Closed, hasMine: false, surroundingCnt: 2},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Closed, mine: true, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 2},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Closed, hasMine: false, surroundingCnt: 2},
-					{state: Closed, hasMine: true, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Closed, mine: false, surroundingCnt: 2},
+					&cell{state: Closed, mine: true, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 1},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 				{
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
-					{state: Opened, hasMine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
+					&cell{state: Opened, mine: false, surroundingCnt: 0},
 				},
 			},
 		},
@@ -329,40 +285,40 @@ func TestField_Open(t *testing.T) {
 			field: &Field{
 				Width:  3,
 				Height: 3,
-				cells: [][]*cell{
+				Cells: [][]Cell{
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: true, surroundingCnt: 0},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: true, surroundingCnt: 0},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
 					},
 					{
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
-						{state: Closed, hasMine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
+						&cell{state: Closed, mine: false, surroundingCnt: 1},
 					},
 				},
 			},
 			coord: &Coordinate{X: 1, Y: 1},
-			expected: [][]*cell{
+			expected: [][]Cell{
 				{
-					{state: Closed, hasMine: false, surroundingCnt: 1},
-					{state: Closed, hasMine: false, surroundingCnt: 1},
-					{state: Closed, hasMine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
 				},
 				{
-					{state: Closed, hasMine: false, surroundingCnt: 1},
-					{state: Exploded, hasMine: true, surroundingCnt: 0},
-					{state: Closed, hasMine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
+					&cell{state: Exploded, mine: true, surroundingCnt: 0},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
 				},
 				{
-					{state: Closed, hasMine: false, surroundingCnt: 1},
-					{state: Closed, hasMine: false, surroundingCnt: 1},
-					{state: Closed, hasMine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
 				},
 			},
 		},
@@ -386,9 +342,9 @@ func TestField_Open(t *testing.T) {
 			field: &Field{
 				Width:  1,
 				Height: 1,
-				cells: [][]*cell{
+				Cells: [][]Cell{
 					{
-						{state: Opened, hasMine: false, surroundingCnt: 0},
+						&cell{state: Opened, mine: false, surroundingCnt: 0},
 					},
 				},
 			},
@@ -400,9 +356,9 @@ func TestField_Open(t *testing.T) {
 			field: &Field{
 				Width:  1,
 				Height: 1,
-				cells: [][]*cell{
+				Cells: [][]Cell{
 					{
-						{state: Flagged, hasMine: true, surroundingCnt: 0},
+						&cell{state: Flagged, mine: true, surroundingCnt: 0},
 					},
 				},
 			},
@@ -422,8 +378,8 @@ func TestField_Open(t *testing.T) {
 				return
 			}
 
-			target := test.field.cells[test.coord.Y][test.coord.X]
-			oldStatus := target.state
+			target := test.field.Cells[test.coord.Y][test.coord.X]
+			oldStatus := target.State()
 
 			result, err := test.field.Open(test.coord)
 
@@ -438,7 +394,7 @@ func TestField_Open(t *testing.T) {
 
 			}
 
-			if target.state == Flagged {
+			if target.State() == Flagged {
 				if err == nil {
 					t.Fatal("Error should be returned when flagged cell is subject to open.")
 				} else if err != ErrOpeningFlaggedCell {
@@ -448,7 +404,7 @@ func TestField_Open(t *testing.T) {
 				return
 			}
 
-			if target.hasMine {
+			if target.hasMine() {
 				if result.NewState != Exploded {
 					t.Fatalf("State should be exploded when target cell has a mine, but was %s", result.NewState)
 				}
@@ -456,10 +412,10 @@ func TestField_Open(t *testing.T) {
 				t.Fatalf("Unexpected state is returned: %s", result.NewState)
 			}
 
-			for i, row := range test.field.cells {
+			for i, row := range test.field.Cells {
 				for ii, cell := range row {
-					if cell.state != test.expected[i][ii].state {
-						t.Errorf("Cell has unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.state)
+					if cell.State() != test.expected[i][ii].State() {
+						t.Errorf("Cell has unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
 					}
 				}
 			}

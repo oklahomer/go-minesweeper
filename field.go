@@ -9,6 +9,7 @@ import (
 var (
 	ErrOpeningOpenedCell    = errors.New("opened cell can not be opened")
 	ErrOpeningFlaggedCell   = errors.New("flagged cell can not be opened")
+	ErrOpeningExplodedCell  = errors.New("exploded cell can not be opened")
 	ErrCoordinateOutOfRange = errors.New("invalid coordinate is given")
 )
 
@@ -49,7 +50,7 @@ func validateConfig(config *Config) error {
 type Field struct {
 	Width  int
 	Height int
-	cells  [][]*cell
+	Cells  [][]Cell
 }
 
 func NewField(config *Config) (*Field, error) {
@@ -72,9 +73,9 @@ func NewField(config *Config) (*Field, error) {
 		return grid
 	}()
 
-	cells := make([][]*cell, config.FieldHeight)
+	cells := make([][]Cell, config.FieldHeight)
 	for i, row := range grid {
-		cells[i] = make([]*cell, config.FieldWidth)
+		cells[i] = make([]Cell, config.FieldWidth)
 
 		for ii, hasMine := range row {
 			var surroundingCnt int
@@ -124,7 +125,7 @@ func NewField(config *Config) (*Field, error) {
 	return &Field{
 		Width:  config.FieldWidth,
 		Height: config.FieldHeight,
-		cells:  cells,
+		Cells:  cells,
 	}, nil
 }
 
@@ -136,35 +137,29 @@ func (f *Field) Open(coord *Coordinate) (*Result, error) {
 		return nil, ErrCoordinateOutOfRange
 	}
 
-	row := f.cells[y]
+	row := f.Cells[y]
 	cell := row[x]
 
-	if cell.state == Opened {
-		return nil, ErrOpeningOpenedCell
-	} else if cell.state == Flagged {
-		return nil, ErrOpeningFlaggedCell
+	result, err := cell.open()
+	if err != nil {
+		return nil, err
 	}
 
-	if cell.hasMine {
-		cell.state = Exploded
-		return &Result{
-			NewState: cell.state,
-		}, nil
+	if result.NewState == Exploded {
+		return result, nil
 	}
 
-	cell.state = Opened
-
-	if cell.surroundingCnt == 0 {
+	if cell.SurroundingCnt() == 0 {
 		for _, c := range f.getSurroundingCoordinates(coord) {
-			r := f.cells[c.Y]
+			r := f.Cells[c.Y]
 			target := r[c.X]
-			if target.state == Closed {
+			if target.State() == Closed {
 				f.Open(c)
 			}
 		}
 	}
 
-	return &Result{NewState: Opened}, nil
+	return result, nil
 }
 
 func (f *Field) getSurroundingCoordinates(coord *Coordinate) []*Coordinate {
@@ -215,44 +210,6 @@ type Coordinate struct {
 	Y int
 }
 
-type State int
-
-func (s State) String() string {
-	switch s {
-	case Closed:
-		return "Closed"
-	case Opened:
-		return "Opened"
-	case Flagged:
-		return "Flagged"
-	case Exploded:
-		return "Exploded"
-	default:
-		panic(fmt.Sprintf("unknown state is given: %d", s))
-	}
-}
-
-const (
-	Closed State = iota
-	Opened
-	Flagged
-	Exploded
-)
-
 type Result struct {
 	NewState State
-}
-
-type cell struct {
-	state          State
-	hasMine        bool
-	surroundingCnt int
-}
-
-func newCell(hasMine bool, surroundingCnt int) *cell {
-	return &cell{
-		state:          Closed,
-		hasMine:        hasMine,
-		surroundingCnt: surroundingCnt,
-	}
 }
