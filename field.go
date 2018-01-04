@@ -10,6 +10,9 @@ var (
 	ErrOpeningOpenedCell    = errors.New("opened cell can not be opened")
 	ErrOpeningFlaggedCell   = errors.New("flagged cell can not be opened")
 	ErrOpeningExplodedCell  = errors.New("exploded cell can not be opened")
+	ErrFlaggingOpenedCell   = errors.New("opened cell can not be flagged")
+	ErrFlaggingFlaggedCell  = errors.New("flagged cell can not be re-flagged")
+	ErrFlaggingExplodedCell = errors.New("exploded cell can not be flagged")
 	ErrCoordinateOutOfRange = errors.New("invalid coordinate is given")
 )
 
@@ -160,6 +163,17 @@ func (f *Field) Open(coord *Coordinate) (*Result, error) {
 	}
 
 	return result, nil
+}
+
+func (f *Field) Flag(coord *Coordinate) (*Result, error) {
+	x := coord.X
+	y := coord.Y
+
+	if x+1 > f.Width || y+1 > f.Height {
+		return nil, ErrCoordinateOutOfRange
+	}
+
+	return f.Cells[y][x].flag()
 }
 
 func (f *Field) getSurroundingCoordinates(coord *Coordinate) []*Coordinate {

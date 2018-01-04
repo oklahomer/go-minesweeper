@@ -89,6 +89,93 @@ func TestNewField(t *testing.T) {
 	}
 }
 
+func TestField_Flag(t *testing.T) {
+	type test struct {
+		field    *Field
+		coord    *Coordinate
+		expected [][]Cell
+	}
+
+	tests := []*test{
+		// Only left top corner has a mine and right bottom is opened.
+		{
+			field: &Field{
+				Width:  2,
+				Height: 2,
+				Cells: [][]Cell{
+					{
+						&cell{state: Closed},
+						&cell{state: Closed},
+					},
+					{
+						&cell{state: Closed},
+						&cell{state: Closed},
+					},
+				},
+			},
+			coord: &Coordinate{X: 1, Y: 1},
+			expected: [][]Cell{
+				{
+					&cell{state: Closed},
+					&cell{state: Closed},
+				},
+				{
+					&cell{state: Closed},
+					&cell{state: Flagged},
+				},
+			},
+		},
+
+		// Invalid coordinate is given
+		{
+			field: &Field{Width: 3, Height: 3},
+			coord: &Coordinate{X: 1, Y: 100},
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			// See if given coordinate is valid
+			if test.coord.X+1 > test.field.Width || test.coord.Y+1 > test.field.Height {
+				_, err := test.field.Flag(test.coord)
+				if err == nil || err != ErrCoordinateOutOfRange {
+					t.Fatalf("Expected error is not returned: %s", err)
+				}
+
+				return
+			}
+
+			target := test.field.Cells[test.coord.Y][test.coord.X]
+			oldStatus := target.State()
+
+			result, err := test.field.Flag(test.coord)
+
+			if oldStatus == Flagged {
+				if err == nil {
+					t.Fatal("Error should be returned when flagged cell is subject to open.")
+				} else if err != ErrOpeningOpenedCell {
+					t.Fatal("ErrOpeningOpenedCell should be returned when flagged cell is subject to open.")
+				}
+
+				return
+
+			}
+
+			if oldStatus == Closed && result.NewState != Flagged {
+				t.Fatalf("Unexpected state is returned: %s", result.NewState)
+			}
+
+			for i, row := range test.field.Cells {
+				for ii, cell := range row {
+					if cell.State() != test.expected[i][ii].State() {
+						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestField_Open(t *testing.T) {
 	type test struct {
 		field    *Field
@@ -415,7 +502,7 @@ func TestField_Open(t *testing.T) {
 			for i, row := range test.field.Cells {
 				for ii, cell := range row {
 					if cell.State() != test.expected[i][ii].State() {
-						t.Errorf("Cell has unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
+						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
 					}
 				}
 			}

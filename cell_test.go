@@ -65,6 +65,60 @@ func TestCell_SurroundingCnt(t *testing.T) {
 	}
 }
 
+func TestCell_flag(t *testing.T) {
+	tests := []struct {
+		cell     *cell
+		newState State
+		error    error
+	}{
+		{
+			cell:     &cell{state: Closed},
+			newState: Flagged,
+		},
+		{
+			cell:  &cell{state: Opened},
+			error: ErrFlaggingOpenedCell,
+		},
+		{
+			cell:  &cell{state: Flagged},
+			error: ErrFlaggingFlaggedCell,
+		},
+		{
+			cell:  &cell{state: Exploded},
+			error: ErrFlaggingExplodedCell,
+		},
+		{
+			cell: &cell{state: 123456},
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					if test.newState != 0 || test.error != nil {
+						// State should be changed or error is expected to be returned
+						t.Fatal("Panicked unexpectedly.")
+					}
+				}
+			}()
+
+			result, err := test.cell.flag()
+			if test.error != err {
+				t.Errorf("Unexpected error is returned: %s.", err)
+			}
+
+			if test.newState != 0 && test.newState != test.cell.state {
+				t.Errorf("Unexpected state: %s.", test.cell.state)
+			}
+
+			if test.newState != 0 && test.newState != result.NewState {
+				t.Errorf("Unepxected result is returned %+v.", result)
+			}
+		})
+	}
+}
+
 func TestCell_open(t *testing.T) {
 	tests := []struct {
 		cell     *cell
