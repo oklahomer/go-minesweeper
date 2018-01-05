@@ -1,9 +1,12 @@
 package minesweeper
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
-	Closed State = iota
+	_ State = iota
+	Closed
 	Opened
 	Flagged
 	Exploded
@@ -15,14 +18,39 @@ func (s State) String() string {
 	switch s {
 	case Closed:
 		return "Closed"
+
 	case Opened:
 		return "Opened"
+
 	case Flagged:
 		return "Flagged"
+
 	case Exploded:
 		return "Exploded"
+
 	default:
 		panic(fmt.Sprintf("unknown state is given: %d", s))
+
+	}
+}
+
+func strToState(str string) (State, error) {
+	switch str {
+	case "Closed":
+		return Closed, nil
+
+	case "Opened":
+		return Opened, nil
+
+	case "Flagged":
+		return Flagged, nil
+
+	case "Exploded":
+		return Exploded, nil
+
+	default:
+		return 0, fmt.Errorf("unknown state is given: %s", str)
+
 	}
 }
 

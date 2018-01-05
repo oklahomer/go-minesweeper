@@ -49,6 +49,51 @@ func TestState_String(t *testing.T) {
 	}
 }
 
+func Test_strToState(t *testing.T) {
+	tests := []struct {
+		string string
+		state  State
+	}{
+		{
+			string: "Closed",
+			state:  Closed,
+		},
+		{
+			string: "Opened",
+			state:  Opened,
+		},
+		{
+			string: "Flagged",
+			state:  Flagged,
+		},
+		{
+			string: "Exploded",
+			state:  Exploded,
+		},
+		{
+			string: "INVALID",
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			state, err := strToState(test.string)
+
+			if test.state == 0 && err == nil {
+				t.Fatal("Expected error is not returned.")
+			}
+
+			if test.state != 0 && err != nil {
+				t.Fatalf("Unexpected error is returned: %s.", err.Error())
+			}
+
+			if state != test.state {
+				t.Errorf("Unexpected state is returned: %s.", state.String())
+			}
+		})
+	}
+}
+
 func TestCell_State(t *testing.T) {
 	state := Exploded
 	var c Cell = &cell{state: state}

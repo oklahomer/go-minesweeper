@@ -1,7 +1,10 @@
 package minesweeper
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -261,6 +264,7 @@ func TestField_Unflag(t *testing.T) {
 		})
 	}
 }
+
 func TestField_Open(t *testing.T) {
 	type test struct {
 		field    *Field
@@ -590,6 +594,134 @@ func TestField_Open(t *testing.T) {
 						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
 					}
 				}
+			}
+		})
+	}
+}
+
+func TestField_MarshalJSON(t *testing.T) {
+	state := Exploded
+	mine := true
+	cnt := 2
+	field := &Field{
+		Width:  1,
+		Height: 1,
+		Cells: [][]Cell{
+			{
+				&cell{state: state, mine: mine, surroundingCnt: cnt},
+			},
+		},
+	}
+
+	bytes, err := json.Marshal(field)
+
+	if err != nil {
+		t.Fatalf("Unexpected error is returned: %s.", err.Error())
+	}
+
+	str := string(bytes)
+	if !strings.Contains(str, state.String()) {
+		t.Errorf("Expected state value is not included: %s.", str)
+	}
+
+	if !strings.Contains(str, fmt.Sprintf("%t", mine)) {
+		t.Errorf("Expected has_mine value is not included: %s.", str)
+	}
+
+	if !strings.Contains(str, strconv.Itoa(cnt)) {
+		t.Errorf("Expected surrounding_count value is not included: %s.", str)
+	}
+}
+
+func TestField_UnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		string         string
+		hasError       bool
+		state          State
+		hasMine        bool
+		surroundingCnt int
+		height         int
+		width          int
+	}{
+		{
+			string:         `{"cells":[[{"has_mine":true,"state":"Flagged","surrounding_count":2}]],"height":1,"width":1}`,
+			hasError:       false,
+			state:          Flagged,
+			hasMine:        true,
+			surroundingCnt: 2,
+			height:         1,
+			width:          1,
+		},
+		{
+			string:   `{"cells":[[{"has_mine":true,"state":"Flagged","surrounding_count":2}]],"height":1}`,
+			hasError: true,
+		},
+		{
+			string:   `{"cells":[[{"has_mine":true,"state":"Flagged","surrounding_count":2}]],"width":1}`,
+			hasError: true,
+		},
+		{
+			string:   `{"height":1,"width":1}`,
+			hasError: true,
+		},
+		{
+			string:   `{"cells": "foobar", height":1,"width":1}`,
+			hasError: true,
+		},
+		{
+			string:   `{"cells":[[{"has_mine":true,"state":"Flagged"}]],"height":1,"width":1}`,
+			hasError: true,
+		},
+		{
+			string:   `{"cells":[[{"has_mine":true,"surrounding_count":2}]],"height":1,"width":1}`,
+			hasError: true,
+		},
+		{
+			string:   `{"cells":[[{"state":"Flagged","surrounding_count":2}]],"height":1,"width":1}`,
+			hasError: true,
+		},
+		{
+			string:   `{"cells":[[{"has_mine":true,"state":"Dummy","surrounding_count":2}]],"height":1,"width":1}`,
+			hasError: true,
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			field := &Field{}
+			err := json.Unmarshal([]byte(test.string), field)
+
+			if test.hasError {
+				if err == nil {
+					t.Fatal("Expected error is not returned.")
+				}
+
+				return
+			}
+
+			if !test.hasError && err != nil {
+				t.Fatalf("Unexpected error is returned: %s.", err.Error())
+			}
+
+			if field.Width != test.width {
+				t.Errorf("Expected width is not set: %d.", field.Width)
+			}
+
+			if field.Height != test.height {
+				t.Errorf("Expected height is not set: %d.", field.Height)
+			}
+
+			cell := field.Cells[0][0]
+			if cell.State() != test.state {
+				t.Errorf("Expected state is not set: %s.", cell.State().String())
+			}
+
+			if cell.hasMine() != test.hasMine {
+				t.Errorf("Expected mine is not set: %t.", cell.hasMine())
+			}
+
+			if cell.SurroundingCnt() != test.surroundingCnt {
+				t.Errorf("Expected surroundingCnt is not set: %d.", cell.SurroundingCnt())
 			}
 		})
 	}

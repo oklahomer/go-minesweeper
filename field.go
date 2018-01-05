@@ -1,8 +1,10 @@
 package minesweeper
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/tidwall/gjson"
 	"math/rand"
 )
 
@@ -186,6 +188,82 @@ func (f *Field) Unflag(coord *Coordinate) (*Result, error) {
 	}
 
 	return f.Cells[y][x].unflag()
+}
+
+func (f *Field) MarshalJSON() ([]byte, error) {
+	m := map[string]interface{}{}
+	m["width"] = f.Width
+	m["height"] = f.Height
+	cells := make([][]interface{}, f.Height)
+	for i, row := range f.Cells {
+		for _, c := range row {
+			cells[i] = append(cells[i], map[string]interface{}{
+				"state":             c.State().String(),
+				"has_mine":          c.hasMine(),
+				"surrounding_count": c.SurroundingCnt(),
+			})
+		}
+	}
+	m["cells"] = cells
+	return json.Marshal(m)
+}
+
+func (f *Field) UnmarshalJSON(b []byte) error {
+	res := gjson.ParseBytes(b)
+
+	// Set width
+	widthValue := res.Get("width")
+	if !widthValue.Exists() {
+		return errors.New(`"width" field is not given`)
+	}
+	f.Width = int(widthValue.Int())
+
+	// Set height
+	heightValue := res.Get("height")
+	if !heightValue.Exists() {
+		return errors.New(`"height" field is not given`)
+	}
+	f.Height = int(heightValue.Int())
+
+	// Set cells
+	cellsValue := res.Get("cells")
+	if !cellsValue.Exists() {
+		return errors.New(`"cells" field is not given`)
+	}
+	f.Cells = make([][]Cell, f.Height)
+	for i, row := range cellsValue.Array() {
+		cells := make([]Cell, f.Width)
+		for ii, c := range row.Array() {
+			stateValue := c.Get("state")
+			if !stateValue.Exists() {
+				return errors.New(`"state" field is not given`)
+			}
+
+			mineValue := c.Get("has_mine")
+			if !mineValue.Exists() {
+				return errors.New(`"has_mine" field is not given`)
+			}
+
+			cntValue := c.Get("surrounding_count")
+			if !cntValue.Exists() {
+				return errors.New(`"surrounding_count" field is not given`)
+			}
+
+			state, err := strToState(stateValue.String())
+			if err != nil {
+				return fmt.Errorf("failed to convert given state value: %s", err.Error())
+			}
+			cells[ii] = &cell{
+				state:          state,
+				mine:           mineValue.Bool(),
+				surroundingCnt: int(cntValue.Int()),
+			}
+		}
+		f.Cells[i] = cells
+	}
+
+	// O.K.
+	return nil
 }
 
 func (f *Field) getSurroundingCoordinates(coord *Coordinate) []*Coordinate {
