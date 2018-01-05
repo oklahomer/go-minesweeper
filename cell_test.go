@@ -119,6 +119,59 @@ func TestCell_flag(t *testing.T) {
 	}
 }
 
+func TestCell_unflag(t *testing.T) {
+	tests := []struct {
+		cell     *cell
+		newState State
+		error    error
+	}{
+		{
+			cell:  &cell{state: Closed},
+			error: ErrUnflaggingNonFlaggedCell,
+		},
+		{
+			cell:  &cell{state: Opened},
+			error: ErrUnflaggingNonFlaggedCell,
+		},
+		{
+			cell:     &cell{state: Flagged},
+			newState: Closed,
+		},
+		{
+			cell:  &cell{state: Exploded},
+			error: ErrUnflaggingNonFlaggedCell,
+		},
+		{
+			cell: &cell{state: 123456},
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					if test.newState != 0 || test.error != nil {
+						t.Fatal("Panicked unexpectedly.")
+					}
+				}
+			}()
+
+			result, err := test.cell.unflag()
+			if test.error != err {
+				t.Errorf("Unexpected error is returned: %s.", err)
+			}
+
+			if test.newState != 0 && test.newState != test.cell.state {
+				t.Errorf("Unexpected state: %s.", test.cell.state)
+			}
+
+			if test.newState != 0 && test.newState != result.NewState {
+				t.Errorf("Unepxected result is returned %+v.", result)
+			}
+		})
+	}
+}
+
 func TestCell_open(t *testing.T) {
 	tests := []struct {
 		cell     *cell

@@ -31,6 +31,7 @@ type Cell interface {
 	SurroundingCnt() int
 	hasMine() bool
 	flag() (*Result, error)
+	unflag() (*Result, error)
 	open() (*Result, error)
 }
 
@@ -74,6 +75,21 @@ func (c *cell) flag() (*Result, error) {
 
 	case Exploded:
 		return nil, ErrFlaggingExplodedCell
+
+	default:
+		panic(fmt.Sprintf("unknown state is set: %d", c.state))
+
+	}
+}
+
+func (c *cell) unflag() (*Result, error) {
+	switch c.state {
+	case Closed, Opened, Exploded:
+		return nil, ErrUnflaggingNonFlaggedCell
+
+	case Flagged:
+		c.state = Closed
+		return &Result{NewState: Closed}, nil
 
 	default:
 		panic(fmt.Sprintf("unknown state is set: %d", c.state))
