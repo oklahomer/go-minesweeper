@@ -1,15 +1,23 @@
 package minesweeper
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
 )
 
-type Renderer interface {
+var (
+	ErrInvalidInput = errors.New("invalid input is given")
+)
+
+type UI interface {
 	Render(*Field) string
+	ParseInput(string) (*Coordinate, error)
 }
 
-type defaultRenderer struct {
+type defaultUI struct {
 	// [1, 2, 3, 4, ...]
 	xSymbols []int
 
@@ -17,7 +25,7 @@ type defaultRenderer struct {
 	ySymbols []string
 }
 
-func (r *defaultRenderer) Render(field *Field) string {
+func (r *defaultUI) Render(field *Field) string {
 	if len(r.xSymbols) == 0 || len(r.ySymbols) == 0 {
 		r.initSymbols(field.Width, field.Height)
 	}
@@ -47,7 +55,45 @@ func (r *defaultRenderer) Render(field *Field) string {
 	return str
 }
 
-func (r *defaultRenderer) initSymbols(width int, height int) {
+func (r *defaultUI) ParseInput(str string) (*Coordinate, error) {
+	fields := strings.Fields(str)
+	if len(fields) != 2 {
+		return nil, ErrInvalidInput
+	}
+
+	x, err := strconv.Atoi(fields[0])
+	if err != nil {
+		return nil, ErrInvalidInput
+	}
+
+	var foundX bool
+	xCoord := 0
+	for i, v := range r.xSymbols {
+		if x == v {
+			foundX = true
+			xCoord = i
+		}
+	}
+	if !(foundX) {
+		return nil, ErrInvalidInput
+	}
+
+	var foundY bool
+	yCoord := 0
+	for i, v := range r.ySymbols {
+		if fields[1] == v {
+			foundY = true
+			yCoord = i
+		}
+	}
+	if !(foundY) {
+		return nil, ErrInvalidInput
+	}
+
+	return &Coordinate{X: xCoord, Y: yCoord}, nil
+}
+
+func (r *defaultUI) initSymbols(width int, height int) {
 	r.xSymbols = make([]int, width)
 	for i := 0; i < width; i++ {
 		r.xSymbols[i] = i + 1

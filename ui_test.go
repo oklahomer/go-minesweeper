@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-func TestDefaultRenderer_initSymbols(t *testing.T) {
+func TestDefaultUI_initSymbols(t *testing.T) {
 	width := 12
 	height := 800
-	renderer := &defaultRenderer{}
+	renderer := &defaultUI{}
 
 	renderer.initSymbols(width, height)
 
@@ -87,7 +87,7 @@ func Test_dispState(t *testing.T) {
 	}
 }
 
-func TestDefaultRenderer_Render(t *testing.T) {
+func TestDefaultUI_Render(t *testing.T) {
 	field := &Field{
 		Width:  2,
 		Height: 2,
@@ -103,7 +103,7 @@ func TestDefaultRenderer_Render(t *testing.T) {
 		},
 	}
 
-	r := &defaultRenderer{}
+	r := &defaultUI{}
 	str := r.Render(field)
 
 	for _, state := range []State{Closed, Opened, Flagged, Exploded} {
@@ -115,5 +115,68 @@ func TestDefaultRenderer_Render(t *testing.T) {
 	if len(strings.Split(str, "\n")) != 3 {
 		fmt.Println(len(strings.Split(str, "\n")))
 		t.Errorf("Unexpected number of lines: \n%s", str)
+	}
+}
+
+func TestDefaultUI_ParseInput(t *testing.T) {
+	tests := []struct {
+		xSymbols []int
+		ySymbols []string
+		input    string
+		expected *Coordinate
+	}{
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b", "c"},
+			input:    "2 c",
+			expected: &Coordinate{X: 1, Y: 2},
+		},
+		{
+			input: "2 c invalid",
+		},
+		{
+			input: "invalid abc",
+		},
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b"},
+			input:    "100 a",
+		},
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b"},
+			input:    "1 zzz",
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			ui := &defaultUI{
+				xSymbols: test.xSymbols,
+				ySymbols: test.ySymbols,
+			}
+
+			coord, err := ui.ParseInput(test.input)
+
+			if test.expected == nil {
+				if err == nil {
+					t.Fatal("Expected error is not returned.")
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Unexpected error is returned: %s.", err.Error())
+			}
+
+			if coord.X != test.expected.X {
+				t.Errorf("Expected X to be %d, but was %d.", coord.X, test.expected.X)
+			}
+
+			if coord.Y != test.expected.Y {
+				t.Errorf("Expected Y to be %d, but was %d.", coord.Y, test.expected.Y)
+			}
+		})
 	}
 }
