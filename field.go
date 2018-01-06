@@ -143,10 +143,8 @@ func (f *Field) Open(coord *Coordinate) (*Result, error) {
 		return nil, ErrCoordinateOutOfRange
 	}
 
-	row := f.Cells[y]
-	cell := row[x]
-
-	result, err := cell.open()
+	target := f.Cells[y][x]
+	result, err := target.open()
 	if err != nil {
 		return nil, err
 	}
@@ -155,17 +153,32 @@ func (f *Field) Open(coord *Coordinate) (*Result, error) {
 		return result, nil
 	}
 
-	if cell.SurroundingCnt() == 0 {
-		for _, c := range f.getSurroundingCoordinates(coord) {
-			r := f.Cells[c.Y]
-			target := r[c.X]
-			if target.State() == Closed {
-				f.Open(c)
-			}
-		}
-	}
+	f.openSurroundings(coord)
 
 	return result, nil
+}
+
+func (f *Field) openSurroundings(coord *Coordinate) {
+	origin := f.Cells[coord.Y][coord.X]
+	if origin.SurroundingCnt() > 0 {
+		// At least one surrounding cell has a mine.
+		// Do not automatically open all surrounding cells.
+		return
+	}
+
+	// All surrounding cells are safe to open.
+	for _, c := range f.getSurroundingCoordinates(coord) {
+		target := f.Cells[c.Y][c.X]
+
+		// Don't open when state is Flagged.
+		// And to avoid opening a particular cell multiple times, proceed to open when state is not "Closed."
+		if target.State() != Closed {
+			continue
+		}
+
+		target.open()
+		f.openSurroundings(c)
+	}
 }
 
 func (f *Field) Flag(coord *Coordinate) (*Result, error) {
