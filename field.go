@@ -19,26 +19,26 @@ var (
 	ErrCoordinateOutOfRange     = errors.New("invalid coordinate is given")
 )
 
-type Config struct {
-	FieldWidth  int `json:"field_width" yaml:"field_width"`
-	FieldHeight int `json:"field_height" yaml:"field_height"`
-	MineCnt     int `json:"mine_count" yaml:"mine_count"`
+type FieldConfig struct {
+	Width   int `json:"width" yaml:"width"`
+	Height  int `json:"height" yaml:"height"`
+	MineCnt int `json:"mine_count" yaml:"mine_count"`
 }
 
-func NewConfig() *Config {
-	return &Config{
-		FieldWidth:  9,
-		FieldHeight: 9,
-		MineCnt:     10,
+func NewFieldConfig() *FieldConfig {
+	return &FieldConfig{
+		Width:   9,
+		Height:  9,
+		MineCnt: 10,
 	}
 }
 
-func validateConfig(config *Config) error {
-	if config.FieldWidth <= 0 {
+func validateConfig(config *FieldConfig) error {
+	if config.Width <= 0 {
 		return errors.New("field width is zero")
 	}
 
-	if config.FieldHeight <= 0 {
+	if config.Height <= 0 {
 		return errors.New("field height is zero")
 	}
 
@@ -46,7 +46,7 @@ func validateConfig(config *Config) error {
 		return errors.New("mine count is zero")
 	}
 
-	if (config.FieldWidth * config.FieldHeight) <= config.MineCnt {
+	if (config.Width * config.Height) <= config.MineCnt {
 		return errors.New("too many mines")
 	}
 
@@ -59,29 +59,29 @@ type Field struct {
 	Cells  [][]Cell
 }
 
-func NewField(config *Config) (*Field, error) {
+func NewField(config *FieldConfig) (*Field, error) {
 	if err := validateConfig(config); err != nil {
 		return nil, fmt.Errorf("invalild config is given: %s", err.Error())
 	}
 
 	grid := func() [][]bool {
-		n := config.FieldWidth * config.FieldHeight
+		n := config.Width * config.Height
 		mines := make([]bool, n)
 		for _, v := range rand.Perm(n)[:config.MineCnt] {
 			mines[v] = true
 		}
 
-		grid := make([][]bool, config.FieldHeight)
-		for i := 0; i < config.FieldHeight; i++ {
-			start := i * config.FieldWidth
-			grid[i] = mines[start : start+config.FieldWidth]
+		grid := make([][]bool, config.Height)
+		for i := 0; i < config.Height; i++ {
+			start := i * config.Width
+			grid[i] = mines[start : start+config.Width]
 		}
 		return grid
 	}()
 
-	cells := make([][]Cell, config.FieldHeight)
+	cells := make([][]Cell, config.Height)
 	for i, row := range grid {
-		cells[i] = make([]Cell, config.FieldWidth)
+		cells[i] = make([]Cell, config.Width)
 
 		for ii, hasMine := range row {
 			var surroundingCnt int
@@ -96,7 +96,7 @@ func NewField(config *Config) (*Field, error) {
 					surroundingCnt++
 				}
 
-				if ii+1 < config.FieldWidth && above[ii+1] {
+				if ii+1 < config.Width && above[ii+1] {
 					surroundingCnt++
 				}
 			}
@@ -105,11 +105,11 @@ func NewField(config *Config) (*Field, error) {
 				surroundingCnt++
 			}
 
-			if ii+1 < config.FieldWidth && row[ii+1] {
+			if ii+1 < config.Width && row[ii+1] {
 				surroundingCnt++
 			}
 
-			if i+1 < config.FieldHeight {
+			if i+1 < config.Height {
 				below := grid[i+1]
 				if ii > 0 && below[ii-1] {
 					surroundingCnt++
@@ -119,7 +119,7 @@ func NewField(config *Config) (*Field, error) {
 					surroundingCnt++
 				}
 
-				if ii+1 < config.FieldWidth && below[ii+1] {
+				if ii+1 < config.Width && below[ii+1] {
 					surroundingCnt++
 				}
 			}
@@ -129,8 +129,8 @@ func NewField(config *Config) (*Field, error) {
 	}
 
 	return &Field{
-		Width:  config.FieldWidth,
-		Height: config.FieldHeight,
+		Width:  config.Width,
+		Height: config.Height,
 		Cells:  cells,
 	}, nil
 }

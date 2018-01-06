@@ -8,15 +8,15 @@ import (
 	"testing"
 )
 
-func TestNewConfig(t *testing.T) {
-	config := NewConfig()
+func TestNewFieldConfig(t *testing.T) {
+	config := NewFieldConfig()
 
-	if config.FieldWidth == 0 {
-		t.Errorf("Config.FieldWidth is not set.")
+	if config.Width == 0 {
+		t.Errorf("Config.Width is not set.")
 	}
 
-	if config.FieldHeight == 0 {
-		t.Errorf("Config.FieldHeight is not set.")
+	if config.Height == 0 {
+		t.Errorf("Config.Height is not set.")
 	}
 
 	if config.MineCnt == 0 {
@@ -25,31 +25,31 @@ func TestNewConfig(t *testing.T) {
 }
 
 func TestNewField(t *testing.T) {
-	var configs = []*Config{
+	var configs = []*FieldConfig{
 		{
-			FieldWidth:  12,
-			FieldHeight: 0,
-			MineCnt:     9,
+			Width:   12,
+			Height:  0,
+			MineCnt: 9,
 		},
 		{
-			FieldWidth:  0,
-			FieldHeight: 12,
-			MineCnt:     9,
+			Width:   0,
+			Height:  12,
+			MineCnt: 9,
 		},
 		{
-			FieldWidth:  12,
-			FieldHeight: 12,
-			MineCnt:     0,
+			Width:   12,
+			Height:  12,
+			MineCnt: 0,
 		},
 		{
-			FieldWidth:  12,
-			FieldHeight: 12,
-			MineCnt:     9,
+			Width:   12,
+			Height:  12,
+			MineCnt: 9,
 		},
 		{
-			FieldWidth:  2,
-			FieldHeight: 2,
-			MineCnt:     10,
+			Width:   2,
+			Height:  2,
+			MineCnt: 10,
 		},
 	}
 
@@ -57,7 +57,7 @@ func TestNewField(t *testing.T) {
 		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
 			field, err := NewField(config)
 
-			if config.FieldWidth == 0 || config.FieldHeight == 0 || config.MineCnt == 0 {
+			if config.Width == 0 || config.Height == 0 || config.MineCnt == 0 {
 				if err == nil {
 					t.Fatal("Error is not returned on invalid *Config.")
 				}
@@ -65,7 +65,7 @@ func TestNewField(t *testing.T) {
 				return
 			}
 
-			if config.MineCnt >= (config.FieldWidth * config.FieldHeight) {
+			if config.MineCnt >= (config.Width * config.Height) {
 				if err == nil {
 					t.Fatal("Error is not returned on invalid *Config.")
 				}
