@@ -113,7 +113,7 @@ func (r *defaultUI) initSymbols(width int, height int) {
 	}
 }
 
-func dispState(s State) string {
+func dispState(s CellState) string {
 	switch s {
 	case Closed:
 		return " "

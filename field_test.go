@@ -171,7 +171,7 @@ func TestField_Flag(t *testing.T) {
 			for i, row := range test.field.Cells {
 				for ii, cell := range row {
 					if cell.State() != test.expected[i][ii].State() {
-						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
+						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. CellState: %s", i, ii, cell.State())
 					}
 				}
 			}
@@ -257,7 +257,7 @@ func TestField_Unflag(t *testing.T) {
 			for i, row := range test.field.Cells {
 				for ii, cell := range row {
 					if cell.State() != test.expected[i][ii].State() {
-						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
+						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. CellState: %s", i, ii, cell.State())
 					}
 				}
 			}
@@ -582,7 +582,7 @@ func TestField_Open(t *testing.T) {
 
 			if target.hasMine() {
 				if result.NewState != Exploded {
-					t.Fatalf("State should be exploded when target cell has a mine, but was %s", result.NewState)
+					t.Fatalf("CellState should be exploded when target cell has a mine, but was %s", result.NewState)
 				}
 			} else if result.NewState != Opened {
 				t.Fatalf("Unexpected state is returned: %s", result.NewState)
@@ -591,7 +591,7 @@ func TestField_Open(t *testing.T) {
 			for i, row := range test.field.Cells {
 				for ii, cell := range row {
 					if cell.State() != test.expected[i][ii].State() {
-						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. State: %s", i, ii, cell.State())
+						t.Errorf("Cell with unexpected state is retuned. X: %d, Y: %d. CellState: %s", i, ii, cell.State())
 					}
 				}
 			}
@@ -637,7 +637,7 @@ func TestField_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
 		string         string
 		hasError       bool
-		state          State
+		state          CellState
 		hasMine        bool
 		surroundingCnt int
 		height         int

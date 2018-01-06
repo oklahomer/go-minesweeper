@@ -5,16 +5,16 @@ import (
 )
 
 const (
-	_ State = iota
+	_ CellState = iota
 	Closed
 	Opened
 	Flagged
 	Exploded
 )
 
-type State int
+type CellState int
 
-func (s State) String() string {
+func (s CellState) String() string {
 	switch s {
 	case Closed:
 		return "Closed"
@@ -34,7 +34,7 @@ func (s State) String() string {
 	}
 }
 
-func strToState(str string) (State, error) {
+func strToCellState(str string) (CellState, error) {
 	switch str {
 	case "Closed":
 		return Closed, nil
@@ -55,7 +55,7 @@ func strToState(str string) (State, error) {
 }
 
 type Cell interface {
-	State() State
+	State() CellState
 	SurroundingCnt() int
 	hasMine() bool
 	flag() (*Result, error)
@@ -72,12 +72,12 @@ func newCell(hasMine bool, surroundingCnt int) Cell {
 }
 
 type cell struct {
-	state          State
+	state          CellState
 	mine           bool
 	surroundingCnt int
 }
 
-func (c *cell) State() State {
+func (c *cell) State() CellState {
 	return c.state
 }
 

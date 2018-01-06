@@ -44,7 +44,7 @@ func TestDefaultUI_initSymbols(t *testing.T) {
 
 func Test_dispState(t *testing.T) {
 	tests := []struct {
-		state    State
+		state    CellState
 		expected string
 	}{
 		{
@@ -106,7 +106,7 @@ func TestDefaultUI_Render(t *testing.T) {
 	r := &defaultUI{}
 	str := r.Render(field)
 
-	for _, state := range []State{Closed, Opened, Flagged, Exploded} {
+	for _, state := range []CellState{Closed, Opened, Flagged, Exploded} {
 		if !strings.Contains(str, dispState(state)) {
 			t.Errorf("Expected cell state for %s is not included.", state.String())
 		}

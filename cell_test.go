@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func TestState_String(t *testing.T) {
+func TestCellState_String(t *testing.T) {
 	tests := []struct {
-		state    State
+		state    CellState
 		expected string
 	}{
 		{
@@ -49,10 +49,10 @@ func TestState_String(t *testing.T) {
 	}
 }
 
-func Test_strToState(t *testing.T) {
+func Test_strToCellState(t *testing.T) {
 	tests := []struct {
 		string string
-		state  State
+		state  CellState
 	}{
 		{
 			string: "Closed",
@@ -77,7 +77,7 @@ func Test_strToState(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
-			state, err := strToState(test.string)
+			state, err := strToCellState(test.string)
 
 			if test.state == 0 && err == nil {
 				t.Fatal("Expected error is not returned.")
@@ -113,7 +113,7 @@ func TestCell_SurroundingCnt(t *testing.T) {
 func TestCell_flag(t *testing.T) {
 	tests := []struct {
 		cell     *cell
-		newState State
+		newState CellState
 		error    error
 	}{
 		{
@@ -167,7 +167,7 @@ func TestCell_flag(t *testing.T) {
 func TestCell_unflag(t *testing.T) {
 	tests := []struct {
 		cell     *cell
-		newState State
+		newState CellState
 		error    error
 	}{
 		{
@@ -220,7 +220,7 @@ func TestCell_unflag(t *testing.T) {
 func TestCell_open(t *testing.T) {
 	tests := []struct {
 		cell     *cell
-		newState State
+		newState CellState
 		error    error
 	}{
 		{

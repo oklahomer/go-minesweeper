@@ -262,7 +262,7 @@ func (f *Field) UnmarshalJSON(b []byte) error {
 				return errors.New(`"surrounding_count" field is not given`)
 			}
 
-			state, err := strToState(stateValue.String())
+			state, err := strToCellState(stateValue.String())
 			if err != nil {
 				return fmt.Errorf("failed to convert given state value: %s", err.Error())
 			}
@@ -328,5 +328,5 @@ type Coordinate struct {
 }
 
 type Result struct {
-	NewState State
+	NewState CellState
 }
