@@ -8,14 +8,14 @@ import (
 
 type DummyUI struct {
 	RenderFunc     func(*Field) string
-	ParseInputFunc func(string) (*Coordinate, error)
+	ParseInputFunc func(string) (OpType, *Coordinate, error)
 }
 
 func (ui *DummyUI) Render(field *Field) string {
 	return ui.RenderFunc(field)
 }
 
-func (ui *DummyUI) ParseInput(str string) (*Coordinate, error) {
+func (ui *DummyUI) ParseInput(str string) (OpType, *Coordinate, error) {
 	return ui.ParseInputFunc(str)
 }
 
@@ -143,7 +143,7 @@ func TestNewGame(t *testing.T) {
 	}
 }
 
-func TestGame_Open(t *testing.T) {
+func TestGame_Operate(t *testing.T) {
 	tests := []struct {
 		ui             UI
 		field          *Field
@@ -151,15 +151,15 @@ func TestGame_Open(t *testing.T) {
 	}{
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (*Coordinate, error) {
-					return nil, errors.New("dummy")
+				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+					return 0, nil, errors.New("dummy")
 				},
 			},
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (*Coordinate, error) {
-					return &Coordinate{X: 100, Y: 100}, nil
+				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+					return Open, &Coordinate{X: 100, Y: 100}, nil
 				},
 			},
 			field: &Field{
@@ -174,8 +174,8 @@ func TestGame_Open(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (*Coordinate, error) {
-					return &Coordinate{X: 0, Y: 0}, nil
+				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+					return Open, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
 			field: &Field{
@@ -191,8 +191,8 @@ func TestGame_Open(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (*Coordinate, error) {
-					return &Coordinate{X: 0, Y: 0}, nil
+				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+					return Open, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
 			field: &Field{
@@ -213,8 +213,8 @@ func TestGame_Open(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (*Coordinate, error) {
-					return &Coordinate{X: 0, Y: 0}, nil
+				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+					return Open, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
 			field: &Field{
@@ -227,6 +227,40 @@ func TestGame_Open(t *testing.T) {
 				},
 			},
 			resultingState: Lost,
+		},
+		{
+			ui: &DummyUI{
+				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+					return Flag, &Coordinate{X: 0, Y: 0}, nil
+				},
+			},
+			field: &Field{
+				Width:  1,
+				Height: 1,
+				Cells: [][]Cell{
+					{
+						&cell{state: Closed, mine: true, surroundingCnt: 0},
+					},
+				},
+			},
+			resultingState: InProgress,
+		},
+		{
+			ui: &DummyUI{
+				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+					return Unflag, &Coordinate{X: 0, Y: 0}, nil
+				},
+			},
+			field: &Field{
+				Width:  1,
+				Height: 1,
+				Cells: [][]Cell{
+					{
+						&cell{state: Flagged, mine: true, surroundingCnt: 0},
+					},
+				},
+			},
+			resultingState: InProgress,
 		},
 	}
 
@@ -250,7 +284,7 @@ func TestGame_Open(t *testing.T) {
 				opened: 0,
 			}
 
-			state, err := game.Open("dummy")
+			state, err := game.Operate("dummy")
 
 			if test.resultingState == 0 {
 				if err == nil {
@@ -273,13 +307,13 @@ func TestGame_Open(t *testing.T) {
 			}
 
 			if test.resultingState != InProgress {
-				state, err = game.Open("dummy")
+				state, err = game.Operate("dummy")
 				if err == nil {
 					t.Error("Error should be returned when operated on finished game.")
 				}
 
 				if state != test.resultingState {
-					t.Errorf("The state should stay as-is when Game.Open is called after finished.")
+					t.Errorf("The state should stay as-is when Game.Operate is called after finished.")
 				}
 			}
 		})

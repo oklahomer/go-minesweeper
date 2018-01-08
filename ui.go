@@ -14,7 +14,7 @@ var (
 
 type UI interface {
 	Render(*Field) string
-	ParseInput(string) (*Coordinate, error)
+	ParseInput(string) (OpType, *Coordinate, error)
 }
 
 type defaultUI struct {
@@ -55,15 +55,16 @@ func (r *defaultUI) Render(field *Field) string {
 	return str
 }
 
-func (r *defaultUI) ParseInput(str string) (*Coordinate, error) {
+func (r *defaultUI) ParseInput(str string) (OpType, *Coordinate, error) {
 	fields := strings.Fields(str)
-	if len(fields) != 2 {
-		return nil, ErrInvalidInput
+	fieldsCnt := len(fields)
+	if fieldsCnt != 2 && fieldsCnt != 3 {
+		return 0, nil, ErrInvalidInput
 	}
 
 	x, err := strconv.Atoi(fields[0])
 	if err != nil {
-		return nil, ErrInvalidInput
+		return 0, nil, ErrInvalidInput
 	}
 
 	var foundX bool
@@ -75,7 +76,7 @@ func (r *defaultUI) ParseInput(str string) (*Coordinate, error) {
 		}
 	}
 	if !(foundX) {
-		return nil, ErrInvalidInput
+		return 0, nil, ErrInvalidInput
 	}
 
 	var foundY bool
@@ -87,10 +88,26 @@ func (r *defaultUI) ParseInput(str string) (*Coordinate, error) {
 		}
 	}
 	if !(foundY) {
-		return nil, ErrInvalidInput
+		return 0, nil, ErrInvalidInput
 	}
 
-	return &Coordinate{X: xCoord, Y: yCoord}, nil
+	coord := &Coordinate{X: xCoord, Y: yCoord}
+
+	if fieldsCnt == 2 {
+		return Open, coord, nil
+	}
+
+	switch strings.ToLower(fields[2]) {
+	case "f", "flag":
+		return Flag, coord, nil
+
+	case "u", "unflag":
+		return Unflag, coord, nil
+
+	default:
+		return 0, nil, ErrInvalidInput
+
+	}
 }
 
 func (r *defaultUI) initSymbols(width int, height int) {

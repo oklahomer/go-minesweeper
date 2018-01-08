@@ -18,6 +18,15 @@ const (
 	Lost
 )
 
+type OpType int
+
+const (
+	_ OpType = iota
+	Open
+	Flag
+	Unflag
+)
+
 func (s GameState) String() string {
 	switch s {
 	case InProgress:
@@ -92,37 +101,54 @@ func NewGame(config *Config, options ...GameOption) (*Game, error) {
 	return game, nil
 }
 
-func (g *Game) Open(str string) (GameState, error) {
+func (g *Game) Operate(str string) (GameState, error) {
 	if g.state != InProgress {
 		return g.state, ErrOperatingFinishedGame
 	}
 
-	coord, err := g.ui.ParseInput(str)
+	opType, coord, err := g.ui.ParseInput(str)
 	if err != nil {
 		return g.state, fmt.Errorf("failed to parse input: %s", err.Error())
 	}
 
-	result, err := g.field.Open(coord)
-	if err != nil {
-		return g.state, err
-	}
-
-	switch result.NewState {
-	case Exploded:
-		g.state = Lost
-
-	case Opened:
-		g.opened++
-		if g.quota == g.opened {
-			g.state = Cleared
+	handleOpenResult := func(r *Result) {
+		if r == nil {
+			return
 		}
 
+		switch r.NewState {
+		case Exploded:
+			g.state = Lost
+
+		case Opened:
+			g.opened++
+			if g.quota == g.opened {
+				g.state = Cleared
+			}
+
+		default:
+			panic(fmt.Errorf("invalid operation result is returnd: %s", r.NewState))
+
+		}
+	}
+	switch opType {
+	case Open:
+		result, err := g.field.Open(coord)
+		handleOpenResult(result)
+		return g.state, err
+
+	case Flag:
+		_, err := g.field.Flag(coord)
+		return g.state, err
+
+	case Unflag:
+		_, err := g.field.Unflag(coord)
+		return g.state, err
+
 	default:
-		panic(fmt.Errorf("invalid operation result is returnd: %s", result.NewState))
+		panic(fmt.Errorf("invalid OpType is returned: %d", opType))
 
 	}
-
-	return g.state, nil
 }
 
 func (g *Game) Render() string {

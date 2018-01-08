@@ -123,19 +123,52 @@ func TestDefaultUI_ParseInput(t *testing.T) {
 		xSymbols []int
 		ySymbols []string
 		input    string
+		opType   OpType
 		expected *Coordinate
 	}{
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b", "c"},
 			input:    "2 c",
+			opType:   Open,
 			expected: &Coordinate{X: 1, Y: 2},
 		},
 		{
-			input: "2 c invalid",
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b", "c"},
+			input:    "2 b f",
+			opType:   Flag,
+			expected: &Coordinate{X: 1, Y: 1},
+		},
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b", "c"},
+			input:    "2 b flag",
+			opType:   Flag,
+			expected: &Coordinate{X: 1, Y: 1},
+		},
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b", "c"},
+			input:    "2 a u",
+			opType:   Unflag,
+			expected: &Coordinate{X: 1, Y: 0},
+		},
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b", "c"},
+			input:    "2 a unflag",
+			opType:   Unflag,
+			expected: &Coordinate{X: 1, Y: 0},
+		},
+		{
+			input: "2 invalid",
 		},
 		{
 			input: "invalid abc",
+		},
+		{
+			input: "invalid number of fields",
 		},
 		{
 			xSymbols: []int{1, 2},
@@ -147,6 +180,11 @@ func TestDefaultUI_ParseInput(t *testing.T) {
 			ySymbols: []string{"a", "b"},
 			input:    "1 zzz",
 		},
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b", "c"},
+			input:    "2 a invalid",
+		},
 	}
 
 	for i, test := range tests {
@@ -156,7 +194,7 @@ func TestDefaultUI_ParseInput(t *testing.T) {
 				ySymbols: test.ySymbols,
 			}
 
-			coord, err := ui.ParseInput(test.input)
+			opType, coord, err := ui.ParseInput(test.input)
 
 			if test.expected == nil {
 				if err == nil {
@@ -170,12 +208,16 @@ func TestDefaultUI_ParseInput(t *testing.T) {
 				t.Fatalf("Unexpected error is returned: %s.", err.Error())
 			}
 
+			if opType != test.opType {
+				t.Errorf("Expected OpType to be %d, but was %d.", test.opType, opType)
+			}
+
 			if coord.X != test.expected.X {
-				t.Errorf("Expected X to be %d, but was %d.", coord.X, test.expected.X)
+				t.Errorf("Expected X to be %d, but was %d.", test.expected.X, coord.X)
 			}
 
 			if coord.Y != test.expected.Y {
-				t.Errorf("Expected Y to be %d, but was %d.", coord.Y, test.expected.Y)
+				t.Errorf("Expected Y to be %d, but was %d.", test.expected.Y, coord.Y)
 			}
 		})
 	}
