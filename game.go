@@ -14,24 +14,43 @@ var (
 	ErrOperatingFinishedGame = errors.New("can not operate on finished game")
 )
 
+// GameState depicts state of the game.
+//
+// When Cleared or Lost is returned from Game.Operate, the game is finished and no further operation is available.
 type GameState int
 
 const (
 	_ GameState = iota
+
+	// InProgress represents a state of a game where the game is not finished yet and user operation is available.
 	InProgress
+
+	// Cleared represents a state of a game where all safe cells are opened.
+	//
+	// This state is final so any further Game.Operate call results in returning GameState of Cleared and ErrOperatingFinishedGame.
 	Cleared
+
+	// Lost represents a state of a game where non-safe cell was dug and underlying mine has exploded.
 	Lost
 )
 
+// OpType represents a type of operation a user is applying.
 type OpType int
 
 const (
 	_ OpType = iota
+
+	// Open represents a kind of operation to open a closed field cell.
 	Open
+
+	// Flag represents a kind of operation to flag a closed suspicious field cell with a possible underlying mine.
 	Flag
+
+	// Unflag represents a kind of operation to unflag a flagged field cell.
 	Unflag
 )
 
+// String returns stringified representation of GameState.
 func (s GameState) String() string {
 	switch s {
 	case InProgress:
@@ -49,6 +68,7 @@ func (s GameState) String() string {
 	}
 }
 
+// MarshalJSON returns GameState value that can be part of JSON structure.
 func (s GameState) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%s"`, s.String())), nil
 }

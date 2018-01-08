@@ -34,16 +34,34 @@ var (
 	ErrUnflaggingNonFlaggedCell = errors.New("non-flagged cell can not be unflagged")
 )
 
+// CellState depicts a state of a cell.
+type CellState int
+
 const (
 	_ CellState = iota
+
+	// Closed represents a state of a cell where no operation is currently applied.
+	//
+	// A cell with this state may or may not have underlying land mine.
 	Closed
+
+	// Opened represents a state of a cell where the cell is dug and is secure.
+	//
+	// This is final and no more operation can be applied to its belonging cell.
 	Opened
+
+	// Flagged represents a state of a cell that is marked by a user to indicate possible underlying mine.
+	//
+	// To open this cell, user must unflag the cell first.
 	Flagged
+
+	// Exploded represents a state of a cell where user tried to open, but had an underlying mine.
+	//
+	// This is final and no more operation can be applied to its belonging cell.
 	Exploded
 )
 
-type CellState int
-
+// String returns stringified representation of CellState.
 func (s CellState) String() string {
 	switch s {
 	case Closed:
