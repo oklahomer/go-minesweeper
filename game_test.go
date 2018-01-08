@@ -1,8 +1,10 @@
 package minesweeper
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -336,5 +338,167 @@ func TestGame_Render(t *testing.T) {
 
 	if rendered != str {
 		t.Errorf("Unexpected output is given: %s.", rendered)
+	}
+}
+
+func TestGame_Save(t *testing.T) {
+	game := &Game{
+		field: &Field{
+			Width:  2,
+			Height: 2,
+			Cells: [][]Cell{
+				{
+					&cell{state: Opened, mine: false, surroundingCnt: 1},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
+				},
+				{
+					&cell{state: Closed, mine: true, surroundingCnt: 0},
+					&cell{state: Closed, mine: false, surroundingCnt: 1},
+				},
+			},
+		},
+		state:  InProgress,
+		quota:  1,
+		opened: 1,
+	}
+
+	buf := bytes.NewBufferString("")
+	i, err := game.Save(buf)
+
+	if err != nil {
+		t.Fatalf("Unexpected error is returned: %s.", err.Error())
+	}
+
+	if i == 0 {
+		t.Error("No byte was written.")
+	}
+
+	// {"field":{"cells":[[{"has_mine":false,"state":"Opened","surrounding_count":1},{"has_mine":false,"state":"Closed","surrounding_count":1}],[{"has_mine":true,"state":"Closed","surrounding_count":0},{"has_mine":false,"state":"Closed","surrounding_count":1}]],"height":2,"width":2},"state":"InProgress","quota":1,"opened":1}
+	str := buf.String()
+	for _, jsonField := range []string{"field", "state", "quota", "opened"} {
+		if !strings.Contains(str, jsonField) {
+			t.Errorf(`Mandatory field "%s" is not present`, jsonField)
+		}
+	}
+}
+
+func TestRestore(t *testing.T) {
+	tests := []struct {
+		str      string
+		options  []GameOption
+		hasError bool
+		state    GameState
+		quota    int
+		opened   int
+	}{
+		{
+			str:    `{"state":"InProgress","quota":1,"opened":2,"field":{"cells":[[{"has_mine":false,"state":"Opened","surrounding_count":1},{"has_mine":false,"state":"Opened","surrounding_count":1}],[{"has_mine":true,"state":"Closed","surrounding_count":0},{"has_mine":false,"state":"Closed","surrounding_count":1}]],"height":2,"width":2}}`,
+			state:  InProgress,
+			quota:  1,
+			opened: 2,
+		},
+		{
+			str:      `{"state":"INVALID_STATE","quota":1,"opened":2,"field":{"cells":[[{"has_mine":false,"state":"Opened","surrounding_count":1},{"has_mine":false,"state":"Opened","surrounding_count":1}],[{"has_mine":true,"state":"Closed","surrounding_count":0},{"has_mine":false,"state":"Closed","surrounding_count":1}]],"height":2,"width":2}}`,
+			hasError: true,
+		},
+		{
+			str:      `{"quota":1,"opened":2,"field":{"cells":[[{"has_mine":false,"state":"Opened","surrounding_count":1},{"has_mine":false,"state":"Opened","surrounding_count":1}],[{"has_mine":true,"state":"Closed","surrounding_count":0},{"has_mine":false,"state":"Closed","surrounding_count":1}]],"height":2,"width":2}}`,
+			hasError: true,
+		},
+		{
+			str:      `{"state":"InProgress","opened":2,"field":{"cells":[[{"has_mine":false,"state":"Opened","surrounding_count":1},{"has_mine":false,"state":"Opened","surrounding_count":1}],[{"has_mine":true,"state":"Closed","surrounding_count":0},{"has_mine":false,"state":"Closed","surrounding_count":1}]],"height":2,"width":2}}`,
+			hasError: true,
+		},
+		{
+			str:      `{"state":"InProgress","quota":1,"field":{"cells":[[{"has_mine":false,"state":"Opened","surrounding_count":1},{"has_mine":false,"state":"Opened","surrounding_count":1}],[{"has_mine":true,"state":"Closed","surrounding_count":0},{"has_mine":false,"state":"Closed","surrounding_count":1}]],"height":2,"width":2}}`,
+			hasError: true,
+		},
+		{
+			str:      `{"state":"InProgress","quota":1,"opened":2}`,
+			hasError: true,
+		},
+		{
+			str:      `{"state":"InProgress","quota":1,"opened":2,"field":{"width":2}}`,
+			hasError: true,
+		},
+		{
+			str:      `{"state":"InProgress","quota":1,"opened":2,"field":{"cells":[[{"has_mine":false,"state":"Opened","surrounding_count":1},{"has_mine":false,"state":"Opened","surrounding_count":1}],[{"has_mine":true,"state":"Closed","surrounding_count":0},{"has_mine":false,"state":"Closed","surrounding_count":1}]],"height":2,"width":2}}`,
+			options:  []GameOption{func(_ *Game) error { return errors.New("dummy") }},
+			hasError: true,
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			game, err := Restore(strings.NewReader(test.str), test.options...)
+			if test.hasError {
+				if err == nil {
+					t.Fatal("Expected error is not returned.")
+				}
+
+				return
+			}
+
+			if !test.hasError && err != nil {
+				t.Fatalf("Unexpected error is returned: %s.", err.Error())
+			}
+
+			if game.ui == nil {
+				t.Error("UI must be set.")
+			}
+
+			if game.state != test.state {
+				t.Errorf("Unexpected state is set: %s.", game.state.String())
+			}
+
+			if game.quota != test.quota {
+				t.Errorf("Unexpected quota is set: %d.", game.quota)
+			}
+
+			if game.opened != test.opened {
+				t.Errorf("Unexpected opened is set: %d.", game.opened)
+			}
+		})
+	}
+}
+
+func Test_strToGameState(t *testing.T) {
+	tests := []struct {
+		string string
+		state  GameState
+	}{
+		{
+			string: "InProgress",
+			state:  InProgress,
+		},
+		{
+			string: "Cleared",
+			state:  Cleared,
+		},
+		{
+			string: "Lost",
+			state:  Lost,
+		},
+		{
+			string: "INVALID",
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test #%d", i+1), func(t *testing.T) {
+			state, err := strToGameState(test.string)
+
+			if test.state == 0 && err == nil {
+				t.Fatal("Expected error is not returned.")
+			}
+
+			if test.state != 0 && err != nil {
+				t.Fatalf("Unexpected error is returned: %s.", err.Error())
+			}
+
+			if state != test.state {
+				t.Errorf("Unexpected state is returned: %s.", state.String())
+			}
+		})
 	}
 }
