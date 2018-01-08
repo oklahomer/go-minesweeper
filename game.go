@@ -152,7 +152,7 @@ func (g *Game) Operate(str string) (GameState, error) {
 			}
 
 		default:
-			panic(fmt.Errorf("invalid operation result is returnd: %s", r.NewState))
+			panic(fmt.Errorf("invalid operation result is returned: %s", r.NewState))
 
 		}
 	}
