@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	// ErrInvalidInput is returned when user input is invalid.
 	ErrInvalidInput = errors.New("invalid input is given")
 )
 

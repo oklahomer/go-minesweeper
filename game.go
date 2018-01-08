@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	// ErrOperatingFinishedGame is returned when a user tries to apply operation to a finished game.
 	ErrOperatingFinishedGame = errors.New("can not operate on finished game")
 )
 

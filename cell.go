@@ -1,7 +1,37 @@
 package minesweeper
 
 import (
+	"errors"
 	"fmt"
+)
+
+var (
+	// ErrOpeningOpenedCell is returned when a user tries to open a cell that is already opened.
+	ErrOpeningOpenedCell = errors.New("opened cell can not be opened")
+
+	// ErrOpeningFlaggedCell is returned when a user tries to open a flagged cell.
+	ErrOpeningFlaggedCell = errors.New("flagged cell can not be opened")
+
+	// ErrOpeningExplodedCell is returned when a user tries to open exploded cell.
+	//
+	// This is seldom returned since operation via Game.Operate properly handles game state and returns ErrOperatingFinishedGame beforehand;
+	// This error can be returned when and only when Field.Open or Cell.Open is directly called.
+	ErrOpeningExplodedCell = errors.New("exploded cell can not be opened")
+
+	// ErrFlaggingOpenedCell is returned when a user tries to flag a cell that is currently flagged.
+	ErrFlaggingOpenedCell = errors.New("opened cell can not be flagged")
+
+	// ErrFlaggingFlaggedCell is returned when a user tries to flag a cell that is already flagged.
+	ErrFlaggingFlaggedCell = errors.New("flagged cell can not be re-flagged")
+
+	// ErrFlaggingExplodedCell is returned when a user tries to flag exploded cell.
+	//
+	// This is seldom returned since operation via Game.Operate properly handles game state and returns ErrOperatingFinishedGame beforehand;
+	// This error can be returned when and only when Field.Open or Cell.Open is directly called.
+	ErrFlaggingExplodedCell = errors.New("exploded cell can not be flagged")
+
+	// ErrUnflaggingNonFlaggedCell is returned when a user tries to unflag a cell that is not currently flagged.
+	ErrUnflaggingNonFlaggedCell = errors.New("non-flagged cell can not be unflagged")
 )
 
 const (
