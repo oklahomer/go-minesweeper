@@ -13,12 +13,15 @@ var (
 	ErrCoordinateOutOfRange = errors.New("invalid coordinate is given")
 )
 
+// FieldConfig contains some configuration variables for Field.
 type FieldConfig struct {
 	Width   int `json:"width" yaml:"width"`
 	Height  int `json:"height" yaml:"height"`
 	MineCnt int `json:"mine_count" yaml:"mine_count"`
 }
 
+// NewFieldConfig construct FieldConfig with default values.
+// Use json.Unmarshal, yaml.Unmarshal or manual manipulation to override default values.
 func NewFieldConfig() *FieldConfig {
 	return &FieldConfig{
 		Width:   9,
@@ -47,12 +50,15 @@ func validateConfig(config *FieldConfig) error {
 	return nil
 }
 
+// Field represents a minefield with given width and height.
+// This is merely a representation of minefield, so the state of a game is not part of this.
 type Field struct {
 	Width  int
 	Height int
 	Cells  [][]Cell
 }
 
+// NewField construct a Field with given configuration.
 func NewField(config *FieldConfig) (*Field, error) {
 	if err := validateConfig(config); err != nil {
 		return nil, fmt.Errorf("invalild config is given: %s", err.Error())
@@ -129,6 +135,14 @@ func NewField(config *FieldConfig) (*Field, error) {
 	}, nil
 }
 
+// Open receives a Coordinate, locate a corresponding cell, and opens it.
+// If surrounding cells has no underlying mine, all surrounding cells are recursively opened.
+//
+// Below errors may be returned:
+// - ErrCoordinateOutOfRange ... there is not corresponding cell
+// - ErrOpeningOpenedCell ... the target cell is already opened
+// - ErrOpeningFlaggedCell ... the target cell is currently flagged and needs to be unflagged before this operation
+// - ErrOpeningExplodedCell ... the target cell's underlying mine is already exploded
 func (f *Field) Open(coord *Coordinate) (*Result, error) {
 	x := coord.X
 	y := coord.Y
@@ -175,6 +189,13 @@ func (f *Field) openSurroundings(coord *Coordinate) {
 	}
 }
 
+// Flag receives a Coordinate, locate a corresponding cell, and flag it to indicate possible underlying mine.
+//
+// Below errors may be returned:
+// - ErrCoordinateOutOfRange ... there is not corresponding cell
+// - ErrFlaggingOpenedCell ... the target cell is already opened
+// - ErrFlaggingFlaggedCell ... the target cell is already flagged
+// - ErrFlaggingExplodedCell ... the target cell's underlying mine is already exploded
 func (f *Field) Flag(coord *Coordinate) (*Result, error) {
 	x := coord.X
 	y := coord.Y
@@ -186,6 +207,11 @@ func (f *Field) Flag(coord *Coordinate) (*Result, error) {
 	return f.Cells[y][x].flag()
 }
 
+// Unflag receives a Coordinate, locate a corresponding cell, and flag it to indicate possible underlying mine.
+//
+// Below errors may be returned:
+// - ErrCoordinateOutOfRange ... there is not corresponding cell
+// - ErrUnflaggingNonFlaggedCell ... the target cell is not currently flagged
 func (f *Field) Unflag(coord *Coordinate) (*Result, error) {
 	x := coord.X
 	y := coord.Y
@@ -197,6 +223,7 @@ func (f *Field) Unflag(coord *Coordinate) (*Result, error) {
 	return f.Cells[y][x].unflag()
 }
 
+// MarshalJSON returns JSON representation of Field.
 func (f *Field) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{}
 	m["width"] = f.Width
@@ -215,6 +242,7 @@ func (f *Field) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+// UnmarshalJSON converts given input to Field instance.
 func (f *Field) UnmarshalJSON(b []byte) error {
 	res := gjson.ParseBytes(b)
 
@@ -316,11 +344,13 @@ func (f *Field) getSurroundingCoordinates(coord *Coordinate) []*Coordinate {
 	return coords
 }
 
+// Coordinate represents a coordinate of specific location on the Field.
 type Coordinate struct {
 	X int
 	Y int
 }
 
+// Result represents a result of given action.
 type Result struct {
 	NewState CellState
 }

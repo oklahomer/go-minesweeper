@@ -90,8 +90,11 @@ func strToGameState(str string) (GameState, error) {
 	}
 }
 
+// GameOption defines signature that a functional option for Game's constructor must satisfy.
 type GameOption func(*Game) error
 
+// WithUI creates GameOption that feeds given UI implementation to Game.
+// Passed UI's Render method is called via Game.Render.
 func WithUI(ui UI) GameOption {
 	return func(g *Game) error {
 		g.ui = ui
@@ -99,16 +102,21 @@ func WithUI(ui UI) GameOption {
 	}
 }
 
+// Config contains some configuration variables for Game.
 type Config struct {
 	Field *FieldConfig `json:"field" yaml:"field"`
 }
 
+// NewConfig construct Config with default values.
+// Use json.Unmarshal, yaml.Unmarshal or manual manipulation to override default values.
 func NewConfig() *Config {
 	return &Config{
 		Field: NewFieldConfig(),
 	}
 }
 
+// Game represents a minesweeper game.
+// Use NewGame to properly construct and start a new game.
 type Game struct {
 	field  *Field
 	ui     UI
@@ -117,6 +125,8 @@ type Game struct {
 	opened int
 }
 
+// NewGame is a constructor for Game.
+// Pass desired number of GameOption to alter behavior.
 func NewGame(config *Config, options ...GameOption) (*Game, error) {
 	game := &Game{
 		state:  InProgress,
@@ -147,6 +157,10 @@ func NewGame(config *Config, options ...GameOption) (*Game, error) {
 	return game, nil
 }
 
+// Operate receives user input and apply operation including Open, Flag and Unflag.
+//
+// Game's underlying UI is responsible for converting received input into a set of OpType and Coordinate
+// because UI presents grid and coordination in preferred format.
 func (g *Game) Operate(str string) (GameState, error) {
 	if g.state != InProgress {
 		return g.state, ErrOperatingFinishedGame
@@ -197,10 +211,13 @@ func (g *Game) Operate(str string) (GameState, error) {
 	}
 }
 
+// Render calls underlying UI's Render method to output human readable representation of this game.
 func (g *Game) Render() string {
 	return g.ui.Render(g.field)
 }
 
+// Save serializes current game in JSON format and writes to given io.Writer.
+// Written JSON can be passed to Restore to restore game.
 func (g *Game) Save(w io.Writer) (int, error) {
 	savable := struct {
 		Field  *Field    `json:"field"`
@@ -222,6 +239,9 @@ func (g *Game) Save(w io.Writer) (int, error) {
 	return w.Write(b)
 }
 
+// Restore restores game data from given io.Reader.
+//
+// Use Game.Save to save ongoing game to be restored.
 func Restore(r io.Reader, options ...GameOption) (*Game, error) {
 	// Construct game with given options
 	game := &Game{}

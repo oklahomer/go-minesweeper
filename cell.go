@@ -102,9 +102,19 @@ func strToCellState(str string) (CellState, error) {
 	}
 }
 
+// Cell represents the smallest unit of minefield to be operated.
+//
+// Destructive methods are not exported, so operation such as Open, Flag and Unflag can only be executed via *Field;
+// Those methods required to tell internal state to UI is exported.
 type Cell interface {
+	// State returns its current state.
+	// UI may use this to indicate current cell state to user.
 	State() CellState
+
+	// SurroundingCnt gives a hint to tell how many mines are hidden in surrounding cells.
+	// UI may display this number to user when this cell is opened.
 	SurroundingCnt() int
+
 	hasMine() bool
 	flag() (*Result, error)
 	unflag() (*Result, error)

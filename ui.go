@@ -13,8 +13,12 @@ var (
 	ErrInvalidInput = errors.New("invalid input is given")
 )
 
+// UI defines an interface to output user friendly representation of a game and receive user input for operation.
 type UI interface {
+	// Render outputs user friendly representation of a game.
 	Render(*Field) string
+
+	// ParseInput receives user input and converts into OpType and Coordinate.
 	ParseInput(string) (OpType, *Coordinate, error)
 }
 
