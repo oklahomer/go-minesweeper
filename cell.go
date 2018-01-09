@@ -191,12 +191,12 @@ func (c *cell) open() (*Result, error) {
 			return &Result{
 				NewState: Exploded,
 			}, nil
-		} else {
-			c.state = Opened
-			return &Result{
-				NewState: Opened,
-			}, nil
 		}
+
+		c.state = Opened
+		return &Result{
+			NewState: Opened,
+		}, nil
 
 	case Opened:
 		return nil, ErrOpeningOpenedCell
