@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"testing"
 )
 
 type DummyUI struct {
-	RenderFunc     func(*Field) string
+	RenderFunc     func(io.Writer, *Field) (int, error)
 	ParseInputFunc func([]byte) (OpType, *Coordinate, error)
 }
 
-func (ui *DummyUI) Render(field *Field) string {
-	return ui.RenderFunc(field)
+func (ui *DummyUI) Render(w io.Writer, field *Field) (int, error) {
+	return ui.RenderFunc(w, field)
 }
 
 func (ui *DummyUI) ParseInput(b []byte) (OpType, *Coordinate, error) {
@@ -325,8 +326,8 @@ func TestGame_Operate(t *testing.T) {
 func TestGame_Render(t *testing.T) {
 	str := "dummy"
 	ui := &DummyUI{
-		RenderFunc: func(_ *Field) string {
-			return str
+		RenderFunc: func(w io.Writer, _ *Field) (int, error) {
+			return w.Write([]byte(str))
 		},
 	}
 	game := &Game{
@@ -334,10 +335,16 @@ func TestGame_Render(t *testing.T) {
 		ui:    ui,
 	}
 
-	rendered := game.Render()
+	w := bytes.NewBuffer([]byte{})
+	err := game.Render(w)
 
-	if rendered != str {
-		t.Errorf("Unexpected output is given: %s.", rendered)
+	if err != nil {
+		t.Fatalf("Unexpected error is returned: %s.", err.Error())
+	}
+
+	output := w.String()
+	if output != str {
+		t.Errorf("Unexpected output is given: %s.", output)
 	}
 }
 

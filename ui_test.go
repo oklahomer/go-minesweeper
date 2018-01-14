@@ -1,6 +1,7 @@
 package minesweeper
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"testing"
@@ -103,9 +104,15 @@ func TestDefaultUI_Render(t *testing.T) {
 		},
 	}
 
+	w := bytes.NewBuffer([]byte{})
 	r := &defaultUI{}
-	str := r.Render(field)
+	_, err := r.Render(w, field)
 
+	if err != nil {
+		t.Fatalf("Unexpected error is returned: %s.", err.Error())
+	}
+
+	str := w.String()
 	for _, state := range []CellState{Closed, Opened, Flagged, Exploded} {
 		if !strings.Contains(str, dispState(state)) {
 			t.Errorf("Expected cell state for %s is not included.", state.String())

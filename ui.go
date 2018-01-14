@@ -3,6 +3,7 @@ package minesweeper
 import (
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"strconv"
 	"strings"
@@ -15,8 +16,8 @@ var (
 
 // UI defines an interface to output user friendly representation of a game and receive user input for operation.
 type UI interface {
-	// Render outputs user friendly representation of a game.
-	Render(*Field) string
+	// Render outputs user friendly representation of a game via given io.Writer.
+	Render(io.Writer, *Field) (int, error)
 
 	// ParseInput receives user input and converts into OpType and Coordinate.
 	ParseInput([]byte) (OpType, *Coordinate, error)
@@ -30,7 +31,7 @@ type defaultUI struct {
 	ySymbols []string
 }
 
-func (r *defaultUI) Render(field *Field) string {
+func (r *defaultUI) Render(w io.Writer, field *Field) (int, error) {
 	if len(r.xSymbols) == 0 || len(r.ySymbols) == 0 {
 		r.initSymbols(field.Width, field.Height)
 	}
@@ -57,7 +58,7 @@ func (r *defaultUI) Render(field *Field) string {
 		}
 	}
 
-	return str
+	return w.Write([]byte(str))
 }
 
 func (r *defaultUI) ParseInput(b []byte) (OpType, *Coordinate, error) {

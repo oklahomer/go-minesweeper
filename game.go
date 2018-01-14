@@ -212,8 +212,11 @@ func (g *Game) Operate(b []byte) (GameState, error) {
 }
 
 // Render calls underlying UI's Render method to output human readable representation of this game.
-func (g *Game) Render() string {
-	return g.ui.Render(g.field)
+//
+// When non-nil error is returned, that indicates rendering is failed and all currently written contents must be disposed.
+func (g *Game) Render(w io.Writer) error {
+	_, err := g.ui.Render(w, g.field)
+	return err
 }
 
 // Save serializes current game in JSON format and writes to given io.Writer.
