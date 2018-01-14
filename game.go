@@ -161,12 +161,12 @@ func NewGame(config *Config, options ...GameOption) (*Game, error) {
 //
 // Game's underlying UI is responsible for converting received input into a set of OpType and Coordinate
 // because UI presents grid and coordination in preferred format.
-func (g *Game) Operate(str string) (GameState, error) {
+func (g *Game) Operate(b []byte) (GameState, error) {
 	if g.state != InProgress {
 		return g.state, ErrOperatingFinishedGame
 	}
 
-	opType, coord, err := g.ui.ParseInput(str)
+	opType, coord, err := g.ui.ParseInput(b)
 	if err != nil {
 		return g.state, fmt.Errorf("failed to parse input: %s", err.Error())
 	}

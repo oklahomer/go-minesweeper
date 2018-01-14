@@ -19,7 +19,7 @@ type UI interface {
 	Render(*Field) string
 
 	// ParseInput receives user input and converts into OpType and Coordinate.
-	ParseInput(string) (OpType, *Coordinate, error)
+	ParseInput([]byte) (OpType, *Coordinate, error)
 }
 
 type defaultUI struct {
@@ -60,8 +60,8 @@ func (r *defaultUI) Render(field *Field) string {
 	return str
 }
 
-func (r *defaultUI) ParseInput(str string) (OpType, *Coordinate, error) {
-	fields := strings.Fields(str)
+func (r *defaultUI) ParseInput(b []byte) (OpType, *Coordinate, error) {
+	fields := strings.Fields(string(b))
 	fieldsCnt := len(fields)
 	if fieldsCnt != 2 && fieldsCnt != 3 {
 		return 0, nil, ErrInvalidInput

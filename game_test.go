@@ -10,15 +10,15 @@ import (
 
 type DummyUI struct {
 	RenderFunc     func(*Field) string
-	ParseInputFunc func(string) (OpType, *Coordinate, error)
+	ParseInputFunc func([]byte) (OpType, *Coordinate, error)
 }
 
 func (ui *DummyUI) Render(field *Field) string {
 	return ui.RenderFunc(field)
 }
 
-func (ui *DummyUI) ParseInput(str string) (OpType, *Coordinate, error) {
-	return ui.ParseInputFunc(str)
+func (ui *DummyUI) ParseInput(b []byte) (OpType, *Coordinate, error) {
+	return ui.ParseInputFunc(b)
 }
 
 func TestGameState_String(t *testing.T) {
@@ -153,14 +153,14 @@ func TestGame_Operate(t *testing.T) {
 	}{
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+				ParseInputFunc: func(_ []byte) (OpType, *Coordinate, error) {
 					return 0, nil, errors.New("dummy")
 				},
 			},
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+				ParseInputFunc: func(_ []byte) (OpType, *Coordinate, error) {
 					return Open, &Coordinate{X: 100, Y: 100}, nil
 				},
 			},
@@ -176,7 +176,7 @@ func TestGame_Operate(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+				ParseInputFunc: func(_ []byte) (OpType, *Coordinate, error) {
 					return Open, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
@@ -193,7 +193,7 @@ func TestGame_Operate(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+				ParseInputFunc: func(_ []byte) (OpType, *Coordinate, error) {
 					return Open, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
@@ -215,7 +215,7 @@ func TestGame_Operate(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+				ParseInputFunc: func(_ []byte) (OpType, *Coordinate, error) {
 					return Open, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
@@ -232,7 +232,7 @@ func TestGame_Operate(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+				ParseInputFunc: func(_ []byte) (OpType, *Coordinate, error) {
 					return Flag, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
@@ -249,7 +249,7 @@ func TestGame_Operate(t *testing.T) {
 		},
 		{
 			ui: &DummyUI{
-				ParseInputFunc: func(s string) (OpType, *Coordinate, error) {
+				ParseInputFunc: func(_ []byte) (OpType, *Coordinate, error) {
 					return Unflag, &Coordinate{X: 0, Y: 0}, nil
 				},
 			},
@@ -286,7 +286,7 @@ func TestGame_Operate(t *testing.T) {
 				opened: 0,
 			}
 
-			state, err := game.Operate("dummy")
+			state, err := game.Operate([]byte("dummy"))
 
 			if test.resultingState == 0 {
 				if err == nil {
@@ -309,7 +309,7 @@ func TestGame_Operate(t *testing.T) {
 			}
 
 			if test.resultingState != InProgress {
-				state, err = game.Operate("dummy")
+				state, err = game.Operate([]byte("dummy"))
 				if err == nil {
 					t.Error("Error should be returned when operated on finished game.")
 				}

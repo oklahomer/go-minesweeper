@@ -122,68 +122,68 @@ func TestDefaultUI_ParseInput(t *testing.T) {
 	tests := []struct {
 		xSymbols []int
 		ySymbols []string
-		input    string
+		input    []byte
 		opType   OpType
 		expected *Coordinate
 	}{
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b", "c"},
-			input:    "2 c",
+			input:    []byte("2 c"),
 			opType:   Open,
 			expected: &Coordinate{X: 1, Y: 2},
 		},
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b", "c"},
-			input:    "2 b f",
+			input:    []byte("2 b f"),
 			opType:   Flag,
 			expected: &Coordinate{X: 1, Y: 1},
 		},
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b", "c"},
-			input:    "2 b flag",
+			input:    []byte("2 b flag"),
 			opType:   Flag,
 			expected: &Coordinate{X: 1, Y: 1},
 		},
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b", "c"},
-			input:    "2 a u",
+			input:    []byte("2 a u"),
 			opType:   Unflag,
 			expected: &Coordinate{X: 1, Y: 0},
 		},
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b", "c"},
-			input:    "2 a unflag",
+			input:    []byte("2 a unflag"),
 			opType:   Unflag,
 			expected: &Coordinate{X: 1, Y: 0},
 		},
 		{
-			input: "2 invalid",
+			input: []byte("2 invalid"),
 		},
 		{
-			input: "invalid abc",
+			input: []byte("invalid abc"),
 		},
 		{
-			input: "invalid number of fields",
-		},
-		{
-			xSymbols: []int{1, 2},
-			ySymbols: []string{"a", "b"},
-			input:    "100 a",
+			input: []byte("invalid number of fields"),
 		},
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b"},
-			input:    "1 zzz",
+			input:    []byte("100 a"),
+		},
+		{
+			xSymbols: []int{1, 2},
+			ySymbols: []string{"a", "b"},
+			input:    []byte("1 zzz"),
 		},
 		{
 			xSymbols: []int{1, 2},
 			ySymbols: []string{"a", "b", "c"},
-			input:    "2 a invalid",
+			input:    []byte("2 a invalid"),
 		},
 	}
 
